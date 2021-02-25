@@ -116,3 +116,36 @@ function bisection(f′, a, b, ϵ=1e-3)
     end
     return (a,b)
 end
+
+function brent_dekker(f, a, b, ϵ=1e-3)
+    if f(a)<f(b)
+        a,b = b,a
+    end
+    c = a
+    flag = true
+    while abs(b-a)>ϵ && f(b) != 0
+        if f(a) != f(c) && f(b) != f(c)
+            fa,fb,fc = f(a),f(b),f(c)
+            s = (a*fb*fc)/((fa-fb)*(fa-fc))+(b*fa*fc)/((fb-fc)*(fb-fa))+(c*fa*fb)/((fc-fa)*(fc-fb))
+        else
+            x,y = f(b),f(a)
+            s = b-((x*(b-a))/(x-y))
+        end
+        if !((3*a+b)/4 <= s <= b) || (flag && abs(s-b)>=abs(b-c)/2) || (!flag && abs(s-b)>=abs(c-d)/2) || (flag && abs(b-c)<ϵ) || (!flag && abs(c-d)<ϵ)
+            s = (a+b)/2
+            flag = true
+        else
+            flag = false
+        end
+        d,c = c,b
+        if f(a)*f(s)<0
+            b = s
+        else
+            a = s
+        end
+        if abs(f(a)) < abs(f(b))
+            a,b = b,a
+        end
+    end
+    return b
+end
