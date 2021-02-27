@@ -61,6 +61,37 @@ function step!(M::NesterovMomentum, f, ∇f, x)
     return x + v
 end
 
+mutable struct Adagrad <: DescentMethod
+    α
+    ϵ
+    s
+end
+function init!(M::Adagrad, f, ∇f, x)
+    M.s = zeros(length(x))
+    return M
+end
+function step!(M::Adagrad, f, ∇f, x)
+    α,ϵ,s,g = M.α,M.ϵ,M.s,∇f(x)
+    s[:] += g.*g
+    return x - α*g ./ (sqrt.(s) .+ ϵ)
+end
+
+mutable struct RMSProp <: DescentMethod
+    α
+    γ
+    ϵ
+    s
+end
+function init!(M::RMSProp, f, ∇f, x)
+    M.s = zeros(length(x))
+    return M
+end
+function step!(M::RMSProp, f, ∇f, x)
+    α, γ, ϵ, s, g = M.α, M.γ, M.ϵ, M.s, ∇f(x)
+    s[:] = γ*s + (1-γ)*(g.*g)
+    return x - α*g ./ (sqrt.(s) .+ ϵ)
+end
+
 function run!(M::DescentMethod, f, ∇f, x; n=1e3, ϵ=1e-3)
     init!(M, f, ∇f, x)
     nrm = 0
@@ -74,4 +105,5 @@ function run!(M::DescentMethod, f, ∇f, x; n=1e3, ϵ=1e-3)
         end
         x = x′
     end
+    return x
 end
