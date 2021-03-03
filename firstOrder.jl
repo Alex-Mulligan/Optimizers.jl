@@ -12,7 +12,7 @@ function step!(M::GradientDescent, f, ∇f, x)
     return x - α*g
 end
 
-struct ConjGradientDescent <: DescentMethod
+mutable struct ConjGradientDescent <: DescentMethod
     d
     g
 end
@@ -98,7 +98,7 @@ function run!(M::DescentMethod, f, ∇f, x; n=1e3, ϵ=1e-3)
     n_iter = 0
     while n_iter < n
         x′ = step!(M, f, ∇f, x)
-        nrm = norm(x-x′)
+        nrm = norm(x′-x)
         n_iter += 1
         if nrm < ϵ
             return x′
