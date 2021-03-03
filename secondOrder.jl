@@ -23,3 +23,37 @@ function Secant_approximation(f′, a, b, tol)
     end
     return b
 end
+
+mutable struct DFP <: DescentMethod
+    Q
+end
+function init!(M::DFP, f, ∇f, x)
+    M.Q = Matrix(1.0I, length(x), length(x))
+    return M
+end
+function step!(M::DFP, f, ∇f, x)
+    Q,g = M.Q,∇f(x)
+    x′ = line_search(f, x, -Q*g)
+    g′ = ∇f(x′)
+    dx = x′ - x
+    dg = g′ - g
+    Q[:] = Q - (Q*dg*dg'*Q)/(dg'*Q*dg)+(dx*dx')/(dx'*dg)
+    return x′
+end
+
+mutable struct BFGS <: DescentMethod
+    Q
+end
+function init!(M::BFGS, f, ∇f, x)
+    M.Q = Matrix(1.0I, length(x), length(x))
+    return M
+end
+function step!(M::BFGS, f, ∇f, x)
+    Q,g = M.Q,∇f(x)
+    x′ = line_search(f, x, -Q*g)
+    g′ = ∇f(x′)
+    dx = x′ - x
+    dg = g′ - g
+    Q[:] = Q - (dx*dg'Q+Q*dg*dx')/(dx'*dg)+(1+(dg'*Q*dg)/(dx'*dg))[1]*(dx*dx')/(dx'*dg)
+    return x′
+end
