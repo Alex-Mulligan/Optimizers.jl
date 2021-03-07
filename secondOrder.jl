@@ -57,3 +57,44 @@ function step!(M::BFGS, f, ∇f, x)
     Q[:] = Q - (dx*dg'Q+Q*dg*dx')/(dx'*dg)+(1+(dg'*Q*dg)/(dx'*dg))[1]*(dx*dx')/(dx'*dg)
     return x′
 end
+
+mutable struct LBFGS <: DescentMethod
+    m
+    dx
+    dg
+    qs
+end
+function init!(M::LBFGS, f, ∇f, x)
+    M.dx = []
+    M.dg = []
+    M.qs = []
+    return M
+end
+function step!(M::LBFGS, f, ∇f, x)
+    dx,dg,qs,g = M.dx,M.dg,M.qs,∇f(x)
+    m = length(dx)
+    if m > 0
+        q = g
+        for i in m:-1:1
+            qs[i] = copy(q)
+            q -= (dx[i]⋅q)/(dg[i]⋅dx[i])*dg[i]
+        end
+        z = (dg[m].*dx[m].*q)/(dg[m]⋅dg[m])
+        for i in 1 : m
+            z += dx[i]*(dx[i]⋅qs[i]-dg[i]⋅z)/(dg[i]⋅dx[i])
+        end
+        x′ = line_search(f, x, -z)
+    else
+        x′ = line_search(f, x, -g)
+    end
+    g′ = ∇f(x′)
+    push!(dx, x′-x)
+    push!(dg, g′-g)
+    push!(qs, zeros(length(x)))
+    while length(dx) > M.m
+        popfirst!(dx)
+        popfirst!(dg)
+        popfirst!(qs)
+    end
+    return x′
+end
