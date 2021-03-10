@@ -92,6 +92,25 @@ function step!(M::RMSProp, f, ∇f, x)
     return x - α*g ./ (sqrt.(s) .+ ϵ)
 end
 
+mutable struct Adadelta <: DescentMethod
+    γg
+    γx
+    ϵ
+    sg
+    sx
+end
+function init!(M::Adadelta, f, ∇f, x)
+    M.sg = zeros(length(x))
+    M.sx = zeros(length(x))
+end
+function step!(M::Adadelta, f, ∇f, x)
+    γg,γx,ϵ,sg,sx,g = M.γg,M.γx,M.ϵ,M.sg,M.sx,∇f(x)
+    sg[:] = γg*sg + (1-γg)*(g.*g)
+    x′ = - (sqrt.(sx) .+ ϵ) ./ (sqrt.(sg) .+ ϵ) .* g
+    sx[:] = γx*sx + (1-γx)*(x′.*x′)
+    return x + x′
+end
+
 function run!(M::DescentMethod, f, ∇f, x; n=1e3, ϵ=1e-3)
     init!(M, f, ∇f, x)
     nrm = 0
