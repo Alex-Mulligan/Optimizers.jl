@@ -111,6 +111,30 @@ function step!(M::Adadelta, f, ∇f, x)
     return x + x′
 end
 
+mutable struct Adam <: DescentMethod
+    α
+    γm1
+    γm2
+    ϵ
+    steps
+    em1
+    em2
+end
+function init!(M::Adam, f, ∇f, x)
+    M.steps = 0
+    M.em1 = zeros(length(x))
+    M.em2 = zeros(length(x))
+end
+function step!(M::Adam, f, ∇f, x)
+    α,γm1,γm2,ϵ,steps,em1,em2,g = M.α,M.γm1,M.γm2,M.ϵ,M.steps,M.em1,M.em2,∇f(x)
+    em1[:] = γm1*em1 + (1-γm1)*g
+    em2[:] = γm2*em2 + (1-γm2)*(g.*g)
+    M.steps = steps + 1
+    em1′ = em1 ./ (1-γm1)
+    em2′ = em2 ./ (1-γm2)
+    return x - α*em1′ ./ (sqrt.(em2′) .+ ϵ)
+end
+
 function run!(M::DescentMethod, f, ∇f, x; n=1e3, ϵ=1e-3)
     init!(M, f, ∇f, x)
     nrm = 0
