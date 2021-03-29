@@ -135,6 +135,46 @@ function step!(M::Adam, f, ∇f, x)
     return x - α*em1′ ./ (sqrt.(em2′) .+ ϵ)
 end
 
+mutable struct HypergradientDescent <: DescentMethod
+    α
+    Startα
+    μ
+    Oldg
+end
+function init!(M::HypergradientDescent, f, ∇f, x)
+    M.α = M.Startα
+    M.Oldg = zeros(length(x))
+    return M
+end
+function step!(M::HypergradientDescent, f, ∇f, x)
+    α,μ,g,Oldg = M.α,M.μ,∇f(x),M.Oldg
+    α = α + μ*(g⋅Oldg)
+    M.α,M.Oldg = α,g
+    return x - α*g
+end
+
+mutable struct HyperNesterov <: DescentMethod
+    α
+    Startα
+    β
+    μ
+    v
+    Oldg
+end
+function init!(M::HyperNesterov, f, ∇f, x)
+    M.α = M.Startα
+    M.Oldg = zeros(length(x))
+    M.v = zeros(length(x))
+    return M
+end
+function step!(M::HyperNesterov, f, ∇f, x)
+    α,μ,g,Oldg,β,v = M.α,M.μ,∇f(x),M.Oldg,M.β,M.v
+    α = α + μ*(g⋅Oldg)
+    v[:] = β*v - α*∇f(x + β*v)
+    M.α,M.Oldg = α,g
+    return x + v
+end
+
 function run!(M::DescentMethod, f, ∇f, x; n=1e3, ϵ=1e-3)
     init!(M, f, ∇f, x)
     nrm = 0
