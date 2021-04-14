@@ -19,6 +19,6 @@
 - Hyper-Nesterov Momentum
 ### Second Order Methods
 - Newton's Method
-- DFP
-- BFGS
-- LBFGS
+- DFP (Davidon-Fletcher-Powell) Algorithm
+- BFGS (Broyden-Fletcher-Goldfarb-Shanno) Algorithm
+- LBFGS (Limited Memory Broyden-Fletcher-Goldfarb-Shanno) Algorithm
